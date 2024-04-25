@@ -2,16 +2,7 @@ import mysql.connector
 import pymongo
 import time
 import paho.mqtt.client as mqtt
-
-# MySQL credentials
-mysql_host = "localhost"
-mysql_user = "root"
-mysql_password = "pi"
-mysql_database = "weather_station"
-
-# MongoDB credentials
-mongodb_host = "mongodb_host"
-mongodb_dbname = "WeatherStation"
+from config import mqtt_host, mqtt_port, mqtt_topic, mongodb_host, mongodb_dbname, mysql_host, mysql_user, mysql_password, mysql_database
 
 # MySQL connection
 db_connection = mysql.connector.connect(
@@ -130,9 +121,9 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_message = on_message
 
-client.connect("192.168.1.4", 1883)
+client.connect(mqtt_host, mqtt_port)
 
-client.subscribe("zimmerWeather")
+client.subscribe(mqtt_topic)
 
 # Check internet connection
 if is_internet_connected():
