@@ -2,6 +2,7 @@ import mysql.connector
 import pymongo
 import time
 import paho.mqtt.client as mqtt
+import json
 from config import mqtt_host, mqtt_port, mqtt_topic, mongodb_host, mongodb_dbname, mysql_host, mysql_user, mysql_password, mysql_database
 
 # MySQL connection
@@ -80,16 +81,16 @@ def on_message(client, userdata, msg):
     topic = msg.topic
     message = msg.payload.decode("utf-8")
 
-    # Extract the values from the message
-    values = message.split(",")
-    temp = float(values[0])
-    humidity = float(values[1])
-    baroPressure = float(values[2])
-    windDirect = float(values[3])
-    avgWindSpd = float(values[4])
-    mxWindSpd = float(values[5])
-    rainPerHr = float(values[6])
-    rainPerDay = float(values[7])
+    # Extract the values from the JSON message
+    data = json.loads(message)
+    temp = float(data["temperature"])
+    humidity = float(data["humidity"])
+    baroPressure = float(data["pressure"])
+    windDirect = float(data["windDirection"])
+    avgWindSpd = float(data["windSpeedAvg"])
+    mxWindSpd = float(data["windSpeedMax"])
+    rainPerHr = float(data["rainfall_H"])
+    rainPerDay = float(data["rainfall_D"])
 
     # Insert the message into MySQL local 
     insert_query = "INSERT INTO weather_data (temp, humidity, baroPressure, windDirect, avgWindSpd, mxWindSpd, rainPerHr, rainPerDay) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -97,7 +98,7 @@ def on_message(client, userdata, msg):
     mycursor.execute(insert_query, insert_values)
     db_connection.commit()
 
-    # Insert the message into MongoDB if notduplicate
+    # Insert the message into MongoDB if not duplicate
     document = {
         "recordID": mycursor.lastrowid,
         "temp": temp,
@@ -125,7 +126,7 @@ client.connect(mqtt_host, mqtt_port)
 
 client.subscribe(mqtt_topic)
 
-# Check internet connection
+# Check internetconnection
 if is_internet_connected():
     push_table_to_mongodb()
 
@@ -133,4 +134,4 @@ if is_internet_connected():
 while True:
     client.loop()
 
-    time.sleep(5)  # Wait for 5 second
+    time.sleep(5)  # Wait for 5 seconds
