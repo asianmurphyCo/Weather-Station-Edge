@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather Dashboard</title>
+</head>
+<body>
+    <h1>Weather Dashboard</h1>
+    <table>
+        <tr>
+            <th>Record ID</th>
+            <th>Temperature</th>
+            <th>Humidity</th>
+            <th>Barometric Pressure</th>
+            <th>Wind Direction</th>
+            <th>Average Wind Speed</th>
+            <th>Maximum Wind Speed</th>
+            <th>Rainfall per Hour</th>
+            <th>Rainfall per Day</th>
+            <th>Record Time</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row['RecordID'] }}</td>
+            <td>{{ row['temp'] }}</td>
+            <td>{{ row['humidity'] }}</td>
+            <td>{{ row['baroPressure'] }}</td>
+            <td>{{ row['windDirect'] }}</td>
+            <td>{{ row['avgWindSpd'] }}</td>
+            <td>{{ row['mxWindSpd'] }}</td>
+            <td>{{ row['rainPerHr'] }}</td>
+            <td>{{ row['rainPerDay'] }}</td>
+            <td>{{ row['recordTime'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
