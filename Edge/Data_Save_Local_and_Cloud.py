@@ -133,4 +133,4 @@ if is_internet_connected():
 while True:
     client.loop()
 
-    time.sleep(5)  # Wait for 5 seconds
+    time.sleep(5)  # Wait for 5 second
