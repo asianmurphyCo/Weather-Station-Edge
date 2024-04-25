@@ -2,6 +2,7 @@ import mysql.connector
 import pymongo
 import time
 import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
 import json
 from config import mqtt_host, mqtt_port, mqtt_topic, mongodb_host, mongodb_dbname, mysql_host, mysql_user, mysql_password, mysql_database
 
@@ -19,6 +20,8 @@ mycursor = db_connection.cursor(dictionary=True)
 myclient = pymongo.MongoClient(mongodb_host)
 mydb = myclient[mongodb_dbname]
 mycol = mydb["WeatherStation"]
+
+# MARK: Remove this function in production
 
 def check_and_reset_table():
     # Check if the table is empty
@@ -39,6 +42,8 @@ def check_and_reset_table():
 # Check and reset the table
 check_and_reset_table()
 
+# ENDMARK
+
 def is_internet_connected():
     # Check if the internet is connected
     # Return True if connected, False otherwise
@@ -57,7 +62,7 @@ def push_table_to_mongodb():
     # Push each non-duplicate row to MongoDB
     for row in rows:
         document = {
-            "RecordID": row["recordID"],  
+            "RecordID": row["recordID"],
             "temp": row["temp"],
             "humidity": row["humidity"],
             "baroPressure": row["baroPressure"],
@@ -92,7 +97,7 @@ def on_message(client, userdata, msg):
     rainPerHr = float(data["rainfall_H"])
     rainPerDay = float(data["rainfall_D"])
 
-    # Insert the message into MySQL local 
+    # Insert the message into MySQL local
     insert_query = "INSERT INTO weather_data (temp, humidity, baroPressure, windDirect, avgWindSpd, mxWindSpd, rainPerHr, rainPerDay) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     insert_values = (temp, humidity, baroPressure, windDirect, avgWindSpd, mxWindSpd, rainPerHr, rainPerDay)
     mycursor.execute(insert_query, insert_values)
@@ -119,7 +124,7 @@ def on_message(client, userdata, msg):
         print("Duplicate document. Skipped insertion.")
 
 # Setup MQTT client
-client = mqtt.Client()
+client = mqtt.Client(CallbackAPIVersion.VERSION2)
 client.on_message = on_message
 
 client.connect(mqtt_host, mqtt_port)

@@ -6,7 +6,7 @@ mysql_password = "pi"
 mysql_database = "weather_station"
 
 # MQTT credentials
-mqtt_host = "192.168.1.4"
+mqtt_host = "127.0.0.1"
 mqtt_port = 1883
 mqtt_topic = "zimmerWeather"
 
