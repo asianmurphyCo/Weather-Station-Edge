@@ -6,13 +6,18 @@ from paho.mqtt.enums import CallbackAPIVersion
 import json
 from config import mqtt_host, mqtt_port, mqtt_topic, mongodb_host, mongodb_dbname, mysql_host, mysql_user, mysql_password, mysql_database
 
+# Open database connections at the start
+db_connection = mysql.connector.connect(
+    host=mysql_host,
+    user=mysql_user,
+    password=mysql_password,
+    database=mysql_database
+)
+myclient = pymongo.MongoClient(mongodb_host)
+mydb = myclient[mongodb_dbname]
+mycol = mydb["WeatherStation"]
+
 def check_and_reset_table():
-    db_connection = mysql.connector.connect(
-        host=mysql_host,
-        user=mysql_user,
-        password=mysql_password,
-        database=mysql_database
-    )
     cursor = db_connection.cursor()
     cursor.execute("SELECT COUNT(*) FROM weather_data")
     result = cursor.fetchone()
@@ -25,7 +30,6 @@ def check_and_reset_table():
         print("Table is not empty.")
 
     cursor.close()
-    db_connection.close()
 
 check_and_reset_table()
 
@@ -33,27 +37,13 @@ def is_internet_connected():
     return True
 
 def is_duplicate_document(document):
-    myclient = pymongo.MongoClient(mongodb_host)
-    mydb = myclient[mongodb_dbname]
-    mycol = mydb["WeatherStation"]
     existing_doc = mycol.find_one({"recordTime": document["recordTime"]})
-    myclient.close()
     return existing_doc is not None
 
 def push_table_to_mongodb():
-    db_connection = mysql.connector.connect(
-        host=mysql_host,
-        user=mysql_user,
-        password=mysql_password,
-        database=mysql_database
-    )
     mycursor = db_connection.cursor(dictionary=True)
     mycursor.execute("SELECT * FROM weather_data")
     rows = mycursor.fetchall()
-
-    myclient = pymongo.MongoClient(mongodb_host)
-    mydb = myclient[mongodb_dbname]
-    mycol = mydb["WeatherStation"]
 
     for row in rows:
         document = {
@@ -78,8 +68,6 @@ def push_table_to_mongodb():
 
     print("Table pushed to MongoDB.")
     mycursor.close()
-    db_connection.close()
-    myclient.close()
 
 def on_message(client, userdata, msg):
     topic = msg.topic
@@ -95,12 +83,6 @@ def on_message(client, userdata, msg):
     rainPerHr = float(data["rainfall_H"])
     rainPerDay = float(data["rainfall_D"])
 
-    db_connection = mysql.connector.connect(
-        host=mysql_host,
-        user=mysql_user,
-        password=mysql_password,
-        database=mysql_database
-    )
     mycursor = db_connection.cursor(dictionary=True)
 
     insert_query = "INSERT INTO weather_data (temp, humidity, baroPressure, windDirect, avgWindSpd, mxWindSpd, rainPerHr, rainPerDay) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
@@ -122,10 +104,6 @@ def on_message(client, userdata, msg):
         "rainPerDay": rainPerDay
     }
 
-    myclient = pymongo.MongoClient(mongodb_host)
-    mydb = myclient[mongodb_dbname]
-    mycol = mydb["WeatherStation"]
-
     if not is_duplicate_document(document):
         mycol.insert_one(document)
         print("Message inserted into MySQL and MongoDB.")
@@ -133,8 +111,6 @@ def on_message(client, userdata, msg):
         print("Duplicate document. Skipped insertion.")
 
     mycursor.close()
-    db_connection.close()
-    myclient.close()
 
 client = mqtt.Client(CallbackAPIVersion.VERSION2)
 client.on_message = on_message
@@ -146,6 +122,12 @@ client.subscribe(mqtt_topic)
 if is_internet_connected():
     push_table_to_mongodb()
 
-while True:
-    client.loop()
-    time.sleep(5)
+try:
+    client.loop_start()
+    while True:
+        time.sleep(5)
+finally:
+    # Stop the loop and close database connections at the end
+    client.loop_stop()
+    db_connection.close()
+    myclient.close()
