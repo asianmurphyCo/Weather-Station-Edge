@@ -64,6 +64,8 @@ void loop() // MARK: Loop
   // Log data
   Serial.println(weatherJSON);
   client.publish(MQTT_TOPIC, weatherJSON.c_str());
+
+  delay(5000); // Delay for 5 seconds before sending the next message
 }
 
 /// @brief Callback function when received an MQTT message
