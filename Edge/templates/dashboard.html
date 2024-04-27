@@ -1,37 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang='en'>
+
 <head>
-    <title>Weather Dashboard</title>
+	<meta charset='UTF-8'>
+	<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+	<title>Zimmer Wetter</title>
+	<link rel='icon' href='data:,'>
+	<link rel='stylesheet' href='./static/style.css'>
+	<script src="./static/autoreload.js"></script>
 </head>
+
 <body>
-    <h1>Weather Dashboard</h1>
-    <table>
-        <tr>
-            <th>Record ID</th>
-            <th>Temperature</th>
-            <th>Humidity</th>
-            <th>Barometric Pressure</th>
-            <th>Wind Direction</th>
-            <th>Average Wind Speed</th>
-            <th>Maximum Wind Speed</th>
-            <th>Rainfall per Hour</th>
-            <th>Rainfall per Day</th>
-            <th>Record Time</th>
-        </tr>
-        {% for row in data %}
-        <tr>
-            <td>{{ row['RecordID'] }}</td>
-            <td>{{ row['temp'] }}</td>
-            <td>{{ row['humidity'] }}</td>
-            <td>{{ row['baroPressure'] }}</td>
-            <td>{{ row['windDirect'] }}</td>
-            <td>{{ row['avgWindSpd'] }}</td>
-            <td>{{ row['mxWindSpd'] }}</td>
-            <td>{{ row['rainPerHr'] }}</td>
-            <td>{{ row['rainPerDay'] }}</td>
-            <td>{{ row['recordTime'] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+	<header>
+		<div><img src='./static/swinburne.svg' alt='Swinburne University Logo'></div>
+		<div id='title'>
+			<h1>Swinburne Weather Service</h1>
+			<h2>IoT Weather Station enhanced by Edge Computing</h2>
+		</div>
+	</header>
+	<main class='grid'>
+		<section style='grid-area: tp'>
+			<h2>Temperature</h2>
+			<p>{{ data[0]['temp'] }} &deg;C</p>
+		</section>
+		<section style='grid-area: ht'>
+			<h2>Humidity</h2>
+			<p>{{ data[0]['humidity'] }} %</p>
+		</section>
+		<section style='grid-area: ps'>
+			<h2>Barometric Pressure</h2>
+			<p>{{ data[0]['baroPressure'] }} hPa</p>
+		</section>
+		<section style='grid-area: rn'>
+			<h2>Rainfall (1 Hour)</h2>
+			<p>{{ data[0]['rainPerHr'] }} mm</p>
+			<h2>Rainfall (1 Day)</h2>
+			<p>{{ data[0]['rainPerDay'] }} mm</p>
+		</section>
+		<section style='grid-area: wd'>
+			<h2>Average Wind Speed</h2>
+			<p>{{ data[0]['avgWindSpd'] }} m/s</p>
+			<h2>Maximum Wind Speed</h2>
+			<p>{{ data[0]['mxWindSpd'] }} m/s</p>
+			<h2>Wind Direction</h2>
+			<p>{{ data[0]['windDirect'] }} degrees</p>
+		</section>
+	</main>
+	<!-- <table>
+		<tr>
+			<th>Record ID</th>
+			<th>Temperature</th>
+			<th>Humidity</th>
+			<th>Barometric Pressure</th>
+			<th>Wind Direction</th>
+			<th>Average Wind Speed</th>
+			<th>Maximum Wind Speed</th>
+			<th>Rainfall per Hour</th>
+			<th>Rainfall per Day</th>
+			<th>Record Time</th>
+		</tr>
+		{% for row in data %}
+		<tr>
+			<td>{{ row['RecordID'] }}</td>
+			<td>{{ row['temp'] }}</td>
+			<td>{{ row['humidity'] }}</td>
+			<td>{{ row['baroPressure'] }}</td>
+			<td>{{ row['windDirect'] }}</td>
+			<td>{{ row['avgWindSpd'] }}</td>
+			<td>{{ row['mxWindSpd'] }}</td>
+			<td>{{ row['rainPerHr'] }}</td>
+			<td>{{ row['rainPerDay'] }}</td>
+			<td>{{ row['recordTime'] }}</td>
+		</tr>
+		{% endfor %}
+	</table> -->
+	<footer>&COPY; 2024 Nguyen Ta Minh Triet @
+		<a target='_blank' href='https://turitoyuenan.pages.dev'>turitoyuenan.pages.dev</a>
+	</footer>
 </body>
+
 </html>
