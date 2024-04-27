@@ -15,7 +15,7 @@ def dashboard():
         database=mysql_database 
     )
     cursor = db_connection.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM weather_data")
+    cursor.execute("SELECT * FROM weather_data ORDER BY recordID DESC")
     data = cursor.fetchall()
     cursor.close()
     db_connection.close()

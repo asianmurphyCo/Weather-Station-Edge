@@ -17,32 +17,19 @@ myclient = pymongo.MongoClient(mongodb_host)
 mydb = myclient[mongodb_dbname]
 mycol = mydb["WeatherStation"]
 
-def check_and_reset_table():
-    cursor = db_connection.cursor()
-    cursor.execute("SELECT COUNT(*) FROM weather_data")
-    result = cursor.fetchone()
-
-    if result[0] == 0:
-        cursor.execute("ALTER TABLE weather_data AUTO_INCREMENT = 1")
-        db_connection.commit()
-        print("Table is empty. Reset recordID to 1.")
-    else:
-        print("Table is not empty.")
-
-    cursor.close()
-
-check_and_reset_table()
-
+# Function to check internet connection
 def is_internet_connected():
     return True
 
+# Function to check if a document already exists in MongoDB
 def is_duplicate_document(document):
     existing_doc = mycol.find_one({"recordTime": document["recordTime"]})
     return existing_doc is not None
 
-def push_table_to_mongodb():
+# Function to check and sync the latest 5 data between MongoDB and MySQL
+def check_and_sync_data():
     mycursor = db_connection.cursor(dictionary=True)
-    mycursor.execute("SELECT * FROM weather_data")
+    mycursor.execute("SELECT * FROM weather_data ORDER BY recordID DESC LIMIT 5")
     rows = mycursor.fetchall()
 
     for row in rows:
@@ -60,15 +47,17 @@ def push_table_to_mongodb():
             "rainPerDay": row["rainPerDay"]
         }
 
+        # If the document does not exist in MongoDB, insert it
         if not is_duplicate_document(document):
             mycol.insert_one(document)
             print("Document inserted into MongoDB.")
         else:
-            print("Duplicate document. Skipped insertion.")
+            print("Document already exists in MongoDB. Skipped insertion.")
 
-    print("Table pushed to MongoDB.")
+    print("Data sync completed.")
     mycursor.close()
 
+# Callback function to handle incoming MQTT messages
 def on_message(client, userdata, msg):
     topic = msg.topic
     message = msg.payload.decode("utf-8")
@@ -85,6 +74,7 @@ def on_message(client, userdata, msg):
 
     mycursor = db_connection.cursor(dictionary=True)
 
+    # Insert the data into MySQL
     insert_query = "INSERT INTO weather_data (temp, humidity, baroPressure, windDirect, avgWindSpd, mxWindSpd, rainPerHr, rainPerDay) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
     insert_values = (temp, humidity, baroPressure, windDirect, avgWindSpd, mxWindSpd, rainPerHr, rainPerDay)
     mycursor.execute(insert_query, insert_values)
@@ -104,6 +94,7 @@ def on_message(client, userdata, msg):
         "rainPerDay": rainPerDay
     }
 
+    # If the document does not exist in MongoDB, insert it
     if not is_duplicate_document(document):
         mycol.insert_one(document)
         print("Message inserted into MySQL and MongoDB.")
@@ -112,16 +103,23 @@ def on_message(client, userdata, msg):
 
     mycursor.close()
 
+    # Check and sync data after every 5 insertions
+    if mycursor.lastrowid % 5 == 0:
+        check_and_sync_data()
+
+# Create MQTT client and set callback function
 client = mqtt.Client(CallbackAPIVersion.VERSION2)
 client.on_message = on_message
 
+# Connect to MQTT broker and subscribe to topic
 client.connect(mqtt_host, mqtt_port)
-
 client.subscribe(mqtt_topic)
 
+# Check and sync data if internet is connected
 if is_internet_connected():
-    push_table_to_mongodb()
+    check_and_sync_data()
 
+# Start the MQTT client loop
 try:
     client.loop_start()
     while True:
