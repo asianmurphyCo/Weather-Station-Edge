@@ -23,7 +23,7 @@ def is_internet_connected():
 
 # Function to check if a document already exists in MongoDB
 def is_duplicate_document(document):
-    existing_doc = mycol.find_one({"recordTime": document["recordTime"]})
+    existing_doc = mycol.find_one({"recordID": document["recordID"]})
     return existing_doc is not None
 
 # Function to check and sync the latest 5 data between MongoDB and MySQL
