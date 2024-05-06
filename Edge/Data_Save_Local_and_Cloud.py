@@ -7,15 +7,20 @@ import json
 from config import mqtt_host, mqtt_port, mqtt_topic, mongodb_host, mongodb_dbname, mysql_host, mysql_user, mysql_password, mysql_database
 
 # Open database connections at the start
+print("Connecting to MySQL database")
 db_connection = mysql.connector.connect(
     host=mysql_host,
     user=mysql_user,
     password=mysql_password,
     database=mysql_database
 )
+print("Connected to MySQL database")
+
+print("Connecting to Mongo database")
 myclient = pymongo.MongoClient(mongodb_host)
 mydb = myclient[mongodb_dbname]
 mycol = mydb["WeatherStation"]
+print("Connected to Mongo database")
 
 # Function to check internet connection
 def is_internet_connected():
@@ -34,7 +39,7 @@ def check_and_sync_data():
 
     for row in rows:
         document = {
-            "RecordID": row["recordID"],
+            "recordID": row["recordID"],
             "recordDate": row["recordDate"].strftime('%Y-%m-%d'),
             "recordTime": str(row["recordTime"]),
             "temp": row["temp"],
