@@ -28,44 +28,45 @@ PubSubClient client(wifi);
 /// @brief Tasks to do once at startup
 void setup() // MARK: Setup
 {
-  // Start Serial communication
-  Serial.begin(9600);
-  Serial.setDebugOutput(IS_DEBUGGING);
+	// Start Serial communication
+	Serial.begin(9600);
+	Serial.setDebugOutput(IS_DEBUGGING);
 
-  // Connect to WiFi
-  connectWiFi(WIFI_NAME, WIFI_PASS);
+	// Connect to WiFi
+	connectWiFi(WIFI_NAME, WIFI_PASS);
 
-  // Resolve MQTT broker IP address
-  IPAddress brokerIP;
-  WiFi.hostByName(MQTT_BROKER, brokerIP);
+	// Resolve MQTT broker IP address
+	IPAddress brokerIP;
+	WiFi.hostByName(MQTT_BROKER, brokerIP);
 
-  // Setup MQTT client
-  client.setServer(brokerIP, MQTT_PORT);
-  client.setCallback(mqttCallback);
+	// Setup MQTT client
+	client.setServer(brokerIP, MQTT_PORT);
+	client.setCallback(mqttCallback);
 
-  // Do time syncing stuffs
-  handleTime();
+	// Do time syncing stuffs
+	handleTime();
 }
 
 /// @brief Tasks to routinely do
 void loop() // MARK: Loop
 {
-  if (!client.connected()) {
-    connectBroker();
-  }
+	if (!client.connected()) { connectBroker(); }
 
-  // Get data from weather station. Redo if format is wrong
-  getData(stationData);
+	// Get data from weather station. Redo if format is wrong
+	getData(stationData);
+	if (stationData[0] != 'c') { return; }
 
-  // Store weather station data
-  data = WeatherData(stationData);
-  String weatherJSON = data.toJSON();
+	// Store weather station data
+	data = WeatherData(stationData);
+	String weatherJSON = data.toJSON();
 
-  // Log data
-  Serial.println(weatherJSON);
-  client.publish(MQTT_TOPIC, weatherJSON.c_str());
+	// Log data
+	if (IS_DEBUGGING) { Serial.println(stationData); }
 
-  delay(5000); // Delay for 5 seconds before sending the next message
+	Serial.println(weatherJSON);
+	client.publish(MQTT_TOPIC, weatherJSON.c_str());
+
+	delay(5000); // Delay for 5 seconds before sending the next message
 }
 
 /// @brief Callback function when received an MQTT message
